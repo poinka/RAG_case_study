@@ -76,7 +76,7 @@ def evaluate_qa_predictions(rows: Iterable[Dict[str, Any]]) -> Dict[str, float]:
     }
 
 
-def recall_at_k(retrieved_doc_ids: List[str], gold_doc_ids: List[str], k: int) -> float:
+def hit_at_k(retrieved_doc_ids: List[str], gold_doc_ids: List[str], k: int) -> float:
     if not gold_doc_ids:
         return 0.0
     retrieved = set(retrieved_doc_ids[:k])

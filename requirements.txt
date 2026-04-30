@@ -1,0 +1,21 @@
+# Core
+datasets>=2.19.0
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=15.0.0
+tqdm>=4.66.0
+
+# Modeling
+torch>=2.1.0
+transformers>=4.46.0
+accelerate>=0.30.0
+sentence-transformers>=3.0.0
+
+# Retrieval
+faiss-cpu>=1.8.0
+rank-bm25>=0.2.2
+
+# Evaluation and plots
+scikit-learn>=1.3.0
+matplotlib>=3.8.0
+psutil>=5.9.0

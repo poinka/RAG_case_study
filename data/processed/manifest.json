@@ -1,0 +1,11 @@
+{
+  "dataset_name": "hotpotqa/hotpot_qa",
+  "dataset_config": "distractor",
+  "dataset_split": "validation",
+  "n_examples": 5000,
+  "n_documents": 49774,
+  "document_unit": "HotpotQA paragraph",
+  "created_at": "2026-04-27T16:20:27.424024Z",
+  "questions_path": "/Users/polinakorobeinikova/IU/NLP/case-study/case-study-rag-factual-consistency/data/processed/questions.parquet",
+  "corpus_path": "/Users/polinakorobeinikova/IU/NLP/case-study/case-study-rag-factual-consistency/data/processed/corpus.parquet"
+}

@@ -1,0 +1,14 @@
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+data/raw/
+data/processed/*.parquet
+data/indexes/*.npy
+data/indexes/*.index
+data/indexes/*.pkl
+results/predictions/*.csv
+results/metrics/*.csv
+results/metrics/*.json
+results/plots/*.png
+.DS_Store
+indexes/

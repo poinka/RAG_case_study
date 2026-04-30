@@ -93,10 +93,6 @@ def support_recall_at_k(retrieved_doc_ids: List[str], gold_doc_ids: List[str], k
     return len(retrieved & gold) / len(gold)
 
 
-def safe_mean(values):
-    values = [v for v in values if v is not None and not (isinstance(v, float) and math.isnan(v))]
-    return float(np.mean(values)) if values else math.nan
-
 def numeric_summary(values, prefix: str) -> Dict[str, float]:
     """
     Robust summary for numeric metrics such as perplexity and latency.

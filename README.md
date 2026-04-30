@@ -1,17 +1,123 @@
 # Case Study: Retrieval-Augmented Language Modeling for Factual Consistency
 
-This repository contains a reproducible case study for comparing a parametric-only transformer against retrieval-augmented language modeling on HotpotQA.
+This repository contains a reproducible NLP case study comparing a parametric-only transformer with retrieval-augmented generation on HotpotQA.
 
 ## Research question
 
-When does retrieval augmentation improve factual consistency over a standard parametric transformer of comparable size, and what are the latency and memory costs?
+When does retrieval augmentation improve factual consistency over a standard parametric transformer of comparable size, and what are the latency, robustness, and memory trade-offs?
+
+## Task
+
+The case study follows the topic:
+
+**Retrieval-Augmented Language Modeling for Factual Consistency**
+
+The goal is to develop a retrieval-augmented language model that accesses an external document index during prediction and compare it with a parametric-only transformer on fact-heavy QA.
+
+## Dataset
+
+- Dataset: `hotpotqa/hotpot_qa`
+- Configuration: `distractor`
+- Split: `validation`
+- Prepared subset: 5,000 examples
+- Evaluation subset: 2,000 examples
+- Indexed documents: 49,774 paragraph-level documents
+
+HotpotQA is used because it provides both gold answers and supporting facts, which makes it possible to evaluate both answer quality and retrieval quality.
 
 ## Experimental systems
 
-1. **Parametric-only LM**: the generator answers from the question only.
-2. **Vanilla RAG**: dense FAISS retrieval over HotpotQA paragraphs + generator conditioned on top-k chunks.
-3. **Advanced RAG**: hybrid BM25 + dense retrieval, Reciprocal Rank Fusion, cross-encoder reranking, and a retrieval-quality gate.
-4. **Robustness variants**: fresh evidence, missing evidence, noisy context, and conflicting context.
+1. **Parametric-only LM**  
+   The generator answers from the question only.
+
+2. **Vanilla RAG**  
+   Dense FAISS retrieval over HotpotQA paragraphs, followed by generation conditioned on top-5 retrieved chunks.
+
+3. **Advanced RAG**  
+   Hybrid BM25 + dense retrieval, Reciprocal Rank Fusion, and cross-encoder reranking.  
+   The final main result is reported **without active quality gating**.
+
+4. **Naive quality gate ablation**  
+   A simple reranker-score gate was tested separately. It rejected many valid examples and reduced answer quality, so it is reported as a negative ablation rather than the main system.
+
+5. **Robustness variants**  
+   RAG systems are evaluated under fresh evidence, noisy context, conflicting context, and missing evidence.
+
+## Models
+
+- Generator: `Qwen/Qwen2.5-0.5B-Instruct`
+- Dense encoder: `sentence-transformers/all-MiniLM-L6-v2`
+- Cross-encoder reranker: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+
+## Metrics
+
+Answer quality:
+
+- Exact Match
+- Token F1
+- Contains Answer
+
+Language-modeling quality:
+
+- Mean answer loss
+- Median answer perplexity
+- P90/P95 answer perplexity
+
+Retrieval quality:
+
+- Hit@5
+- SupportRecall@5
+
+Efficiency:
+
+- Retrieval latency
+- Generation latency
+- Total latency
+- Index memory footprint
+
+## Main results
+
+| System | Exact Match | Token F1 | Contains Answer | Mean Answer Loss | Median PPL | Mean Total Latency |
+|---|---:|---:|---:|---:|---:|---:|
+| Parametric-only | 0.0255 | 0.0869 | 0.1455 | 3.9455 | 29.65 | 2.111 s |
+| Vanilla RAG | 0.1060 | 0.1849 | 0.2550 | 3.2459 | 12.40 | 2.769 s |
+| Advanced RAG | 0.1360 | 0.2359 | 0.3145 | 2.6662 | 5.36 | 3.524 s |
+
+Advanced RAG achieves the best answer quality and lowest answer loss, but it also introduces higher latency due to hybrid retrieval and reranking.
+
+## Robustness results
+
+Token F1 under imperfect retrieval memory:
+
+| Condition | Vanilla RAG | Advanced RAG |
+|---|---:|---:|
+| Fresh | 0.1849 | 0.2359 |
+| Noisy context | 0.1646 | 0.2098 |
+| Conflicting context | 0.1140 | 0.1321 |
+| Missing evidence | 0.0989 | 0.1153 |
+
+The results show that RAG improves factual consistency when relevant evidence is available, but both systems degrade when the external memory is noisy, conflicting, or missing evidence.
+
+## Naive quality gate ablation
+
+| System | Exact Match | Token F1 | Contains Answer |
+|---|---:|---:|---:|
+| Advanced RAG with naive gate | 0.0595 | 0.1118 | 0.1730 |
+| Advanced RAG without active gate | 0.1360 | 0.2359 | 0.3145 |
+
+The naive gate used threshold `5.7721` and rejected 51.7% of examples. It hurt answer quality, so it is treated as a negative ablation.
+
+## Memory footprint
+
+| Component | Size |
+|---|---:|
+| Generator model | 1,884.6 MB |
+| FAISS dense index | 72.9 MB |
+| Stored dense embeddings | 72.9 MB |
+| BM25 index | 56.2 MB |
+| All index files | 212.5 MB |
+
+The retrieval index is much smaller than the generator model. The main trade-off is latency rather than storage.
 
 ## Recommended execution order
 
@@ -30,13 +136,6 @@ Run notebooks in this order:
 6. `notebooks/06_robustness_latency_memory_analysis.ipynb`
 7. `notebooks/07_poster_tables_and_figures.ipynb`
 
-## Default models
-
-- Generator: `Qwen/Qwen2.5-0.5B-Instruct`
-- Dense encoder: `sentence-transformers/all-MiniLM-L6-v2`
-- Cross-encoder reranker: `cross-encoder/ms-marco-MiniLM-L-6-v2`
-- Dataset: `hotpotqa/hotpot_qa`, config `distractor`
-
 ## Outputs
 
 - Processed data: `data/processed/`
@@ -44,9 +143,11 @@ Run notebooks in this order:
 - Predictions: `results/predictions/`
 - Metrics: `results/metrics/`
 - Plots: `results/plots/`
-- Poster outline: `poster/poster_outline.md`
 
-## Notes
+Large generated artifacts are not committed to GitHub and can be regenerated by running the notebooks.
 
-Start with `N_EXAMPLES=500` for a fast dry run. Increase to 1000-3000 examples for final experiments.
-For model-generation notebooks, use a smaller `EVAL_N` first, such as 100-200, then scale if compute allows.
+## Poster
+
+The final poster is available as:
+
+`poster.pdf`
